@@ -1,5 +1,5 @@
 // Portfolio Application Logic for G. Sai Harshith
-// Modern Dark Minimalist Bento Grid + CLI Terminal + Live GitHub Integration
+// Modern Dual Light/Dark Minimalist Bento Grid + CLI Terminal + Live GitHub Integration
 
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize Lucide Icons
@@ -13,30 +13,58 @@ document.addEventListener('DOMContentLoaded', () => {
     yearEl.textContent = new Date().getFullYear();
   }
 
-  // 1. Role Cycler (Typewriter effect)
+  // 1. Theme Switcher (Light / Dark Mode with Persistence)
+  initThemeToggle();
+
+  // 2. Role Cycler (Typewriter effect)
   initRoleCycler();
 
-  // 2. Mouse-follow spotlight effect for Bento cards
+  // 3. Mouse-follow spotlight effect for Bento cards
   initCardSpotlight();
 
-  // 3. Interactive Floating Particle Canvas
+  // 4. Interactive Floating Particle Canvas
   initParticleCanvas();
 
-  // 4. Live GitHub Data Fetching (Unknownknowns1)
+  // 5. Live GitHub Data Fetching (Unknownknowns1)
   fetchGitHubData();
 
-  // 5. Interactive CLI Terminal Drawer
+  // 6. Interactive CLI Terminal Drawer
   initTerminal();
 
-  // 6. Copy to Clipboard Handlers
+  // 7. Copy to Clipboard Handlers
   initCopyButtons();
 
-  // 7. Contact Form Handling
+  // 8. Contact Form Handling
   initContactForm();
 });
 
 /* ==========================================================================
-   1. Role Cycler (Typewriter style)
+   1. Theme Switcher (Light / Dark Mode)
+   ========================================================================== */
+function initThemeToggle() {
+  const toggleBtn = document.getElementById('theme-toggle-btn');
+  if (!toggleBtn) return;
+
+  toggleBtn.addEventListener('click', () => {
+    toggleTheme();
+  });
+}
+
+function toggleTheme() {
+  const isDark = document.documentElement.classList.toggle('dark');
+  const currentTheme = isDark ? 'dark' : 'light';
+  localStorage.setItem('portfolio-theme', currentTheme);
+
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+
+  showToast(`Switched to ${isDark ? 'Dark 🌙' : 'Light ☀️'} mode`);
+  return currentTheme;
+}
+
+/* ==========================================================================
+   2. Role Cycler (Typewriter style)
    ========================================================================== */
 function initRoleCycler() {
   const roles = [
@@ -84,7 +112,7 @@ function initRoleCycler() {
 }
 
 /* ==========================================================================
-   2. Bento Card Spotlight Tracking
+   3. Bento Card Spotlight Tracking
    ========================================================================== */
 function initCardSpotlight() {
   const cards = document.querySelectorAll('.bento-card');
@@ -100,7 +128,7 @@ function initCardSpotlight() {
 }
 
 /* ==========================================================================
-   3. Interactive Particle Background Canvas
+   4. Interactive Particle Background Canvas
    ========================================================================== */
 function initParticleCanvas() {
   const canvas = document.getElementById('particle-canvas');
@@ -139,6 +167,11 @@ function initParticleCanvas() {
   function render() {
     ctx.clearRect(0, 0, width, height);
 
+    const isDark = document.documentElement.classList.contains('dark');
+    const particleColor = isDark ? 'rgba(6, 182, 212, 0.5)' : 'rgba(8, 145, 178, 0.45)';
+    const lineColorBase = isDark ? '6, 182, 212' : '8, 145, 178';
+    const lineAlphaMax = isDark ? 0.15 : 0.12;
+
     // Draw connecting lines
     for (let i = 0; i < particles.length; i++) {
       for (let j = i + 1; j < particles.length; j++) {
@@ -150,7 +183,7 @@ function initParticleCanvas() {
           ctx.beginPath();
           ctx.moveTo(particles[i].x, particles[i].y);
           ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = `rgba(6, 182, 212, ${0.15 * (1 - dist / 130)})`;
+          ctx.strokeStyle = `rgba(${lineColorBase}, ${lineAlphaMax * (1 - dist / 130)})`;
           ctx.lineWidth = 0.7;
           ctx.stroke();
         }
@@ -178,7 +211,7 @@ function initParticleCanvas() {
 
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(6, 182, 212, 0.5)';
+      ctx.fillStyle = particleColor;
       ctx.fill();
     });
 
@@ -189,7 +222,7 @@ function initParticleCanvas() {
 }
 
 /* ==========================================================================
-   4. Live GitHub Data Fetching (User: Unknownknowns1)
+   5. Live GitHub Data Fetching (User: Unknownknowns1)
    ========================================================================== */
 async function fetchGitHubData() {
   const username = 'Unknownknowns1';
@@ -276,38 +309,38 @@ function renderRepos(repos, container) {
 
   repos.slice(0, 6).forEach(repo => {
     const lang = repo.language || 'Code';
-    let langColor = 'bg-cyan-400';
-    if (lang === 'Python') langColor = 'bg-yellow-400';
-    if (lang === 'Shell') langColor = 'bg-emerald-400';
-    if (lang === 'C' || lang === 'C++') langColor = 'bg-blue-400';
+    let langColor = 'bg-cyan-500';
+    if (lang === 'Python') langColor = 'bg-yellow-500';
+    if (lang === 'Shell') langColor = 'bg-emerald-500';
+    if (lang === 'C' || lang === 'C++') langColor = 'bg-blue-500';
 
     const card = document.createElement('a');
     card.href = repo.html_url;
     card.target = '_blank';
     card.rel = 'noopener noreferrer';
-    card.className = 'group p-5 rounded-2xl bg-slate-800/40 hover:bg-slate-800/80 border border-white/5 hover:border-cyan-500/40 transition-all flex flex-col justify-between';
+    card.className = 'group p-5 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-white/5 hover:border-cyan-500/50 transition-all flex flex-col justify-between shadow-sm';
 
     card.innerHTML = `
       <div>
         <div class="flex items-center justify-between text-xs font-mono mb-2">
-          <span class="flex items-center gap-1.5 text-cyan-400 font-semibold group-hover:text-cyan-300">
+          <span class="flex items-center gap-1.5 text-cyan-700 dark:text-cyan-400 font-semibold group-hover:text-cyan-600 dark:group-hover:text-cyan-300">
             <i data-lucide="folder-git-2" class="w-4 h-4"></i>
             ${repo.name}
           </span>
-          <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 text-slate-500 group-hover:text-cyan-400 transition-colors"></i>
+          <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 text-slate-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors"></i>
         </div>
-        <p class="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+        <p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
           ${repo.description || 'Public open-source repository and experimental modules by Sai Harshith.'}
         </p>
       </div>
 
-      <div class="flex items-center gap-4 text-[11px] font-mono text-slate-400 pt-3 mt-2 border-t border-white/5">
+      <div class="flex items-center gap-4 text-[11px] font-mono text-slate-500 dark:text-slate-400 pt-3 mt-2 border-t border-slate-200 dark:border-white/5">
         <span class="flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full ${langColor}"></span>
           ${lang}
         </span>
         <span class="flex items-center gap-1">
-          <i data-lucide="star" class="w-3 h-3 text-amber-400"></i>
+          <i data-lucide="star" class="w-3 h-3 text-amber-500 dark:text-amber-400"></i>
           ${repo.stargazers_count || 0}
         </span>
       </div>
@@ -322,7 +355,7 @@ function renderRepos(repos, container) {
 }
 
 /* ==========================================================================
-   5. Interactive CLI Terminal Drawer / Modal
+   6. Interactive CLI Terminal Drawer / Modal
    ========================================================================== */
 function initTerminal() {
   const openBtn = document.getElementById('open-terminal-btn');
@@ -429,6 +462,7 @@ function initTerminal() {
           <div class="text-cyan-400 font-bold mb-1">Available System Commands:</div>
           <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-slate-300">
             <div><span class="text-emerald-400">help</span> - List all shell commands</div>
+            <div><span class="text-emerald-400">theme</span> - Toggle light/dark theme</div>
             <div><span class="text-emerald-400">about</span> - Background & engineering bio</div>
             <div><span class="text-emerald-400">projects</span> - View featured projects</div>
             <div><span class="text-emerald-400">skills</span> - Inspect technical stack</div>
@@ -440,6 +474,12 @@ function initTerminal() {
             <div><span class="text-emerald-400">exit</span> - Close terminal drawer</div>
           </div>
         `;
+        break;
+
+      case 'theme':
+      case 'mode':
+        const newTheme = toggleTheme();
+        responseDiv.innerHTML = `<span class="text-emerald-400">Theme switched to <strong>${newTheme}</strong> mode.</span>`;
         break;
 
       case 'about':
@@ -546,7 +586,7 @@ function initTerminal() {
 }
 
 /* ==========================================================================
-   6. Copy to Clipboard & Toast
+   7. Copy to Clipboard & Toast
    ========================================================================== */
 function initCopyButtons() {
   const email = "saiharshith54321@gmail.com";
@@ -581,7 +621,7 @@ function showToast(message) {
 }
 
 /* ==========================================================================
-   7. Working Contact Form
+   8. Working Contact Form
    ========================================================================== */
 function initContactForm() {
   const form = document.getElementById('contact-form');
@@ -633,7 +673,7 @@ function initContactForm() {
         showToast("Message sent successfully! Sai will reply soon.");
         if (statusEl) {
           statusEl.textContent = "Message sent successfully!";
-          statusEl.className = "text-xs font-mono text-emerald-400";
+          statusEl.className = "text-xs font-mono text-emerald-500";
         }
         form.reset();
       } else {
@@ -643,7 +683,7 @@ function initContactForm() {
         showToast("Opening default email client...");
         if (statusEl) {
           statusEl.textContent = "Opened mail draft in your email client.";
-          statusEl.className = "text-xs font-mono text-cyan-400";
+          statusEl.className = "text-xs font-mono text-cyan-600 dark:text-cyan-400";
         }
       }
     } catch (err) {
@@ -653,7 +693,7 @@ function initContactForm() {
       showToast("Opened mail draft in your email client.");
       if (statusEl) {
         statusEl.textContent = "Draft opened in email client.";
-        statusEl.className = "text-xs font-mono text-cyan-400";
+        statusEl.className = "text-xs font-mono text-cyan-600 dark:text-cyan-400";
       }
     } finally {
       submitBtn.disabled = false;
