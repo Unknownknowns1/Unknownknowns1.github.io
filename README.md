@@ -69,7 +69,8 @@ Then visit: [http://localhost:3000](http://localhost:3000)
    git push -u origin main
    ```
 4. Go to **Settings > Pages** in your repo, choose the `main` branch, and click **Save**.
-5. Your portfolio is instantly live at: `https://Unknownknowns1.github.io`!
+5. Your custom domain is pre-configured via the included `CNAME` file to go live at:
+   **`https://gsaiharshith.is-a.dev`** (and also accessible at `https://Unknownknowns1.github.io`).
 
 ---
 
