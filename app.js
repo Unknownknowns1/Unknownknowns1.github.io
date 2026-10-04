@@ -1,5 +1,7 @@
-// Portfolio Application Logic for G. Sai Harshith
-// Modern Dual Light/Dark Minimalist Bento Grid + CLI Terminal + Live GitHub Integration
+// ==========================================================================
+// Fluid 120FPS Performance Engine - G. Sai Harshith Portfolio
+// Integrated with Lenis Inertial Scroll, 3D Spring Physics & Composited Transforms
+// ==========================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize Lucide Icons
@@ -7,39 +9,335 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
   }
 
-  // Update dynamic year
+  // Update dynamic copyright year
   const yearEl = document.getElementById('year');
   if (yearEl) {
     yearEl.textContent = new Date().getFullYear();
   }
 
-  // 1. Theme Switcher (Light / Dark Mode with Persistence)
-  initThemeToggle();
+  // 1. Lenis 120Hz Inertial Smooth Scroll
+  initSmoothScroll();
 
-  // 2. Role Cycler (Typewriter effect)
-  initRoleCycler();
+  // 2. Fluid Scroll-Reveal Observer (Intersection Observer)
+  initScrollReveal();
 
-  // 3. Mouse-follow spotlight effect for Bento cards
-  initCardSpotlight();
+  // 3. 3D Tilt Physics & Smooth Lerped Card Spotlights
+  initBentoPhysics();
 
-  // 4. Interactive Floating Particle Canvas
+  // 4. Magnetic Action Buttons
+  initMagneticButtons();
+
+  // 5. Delta-Time 120Hz High-DPI Constellation Canvas
   initParticleCanvas();
 
-  // 5. Live GitHub Data Fetching (Unknownknowns1)
+  // 6. Theme Switcher (Light / Dark Mode with Persistence)
+  initThemeToggle();
+
+  // 7. Dynamic Role Cycler (Typewriter effect)
+  initRoleCycler();
+
+  // 8. Live GitHub REST API Integration (Unknownknowns1)
   fetchGitHubData();
 
-  // 6. Interactive CLI Terminal Drawer
+  // 9. Interactive CLI Terminal Drawer
   initTerminal();
 
-  // 7. Copy to Clipboard Handlers
+  // 10. Copy to Clipboard Handlers
   initCopyButtons();
 
-  // 8. Contact Form Handling
+  // 11. Working Contact Form
   initContactForm();
 });
 
 /* ==========================================================================
-   1. Theme Switcher (Light / Dark Mode)
+   1. Lenis 120Hz Inertial Momentum Smooth Scroll
+   ========================================================================== */
+let lenisInstance = null;
+
+function initSmoothScroll() {
+  if (typeof window.Lenis === 'undefined') {
+    console.info('Lenis not available, falling back to native GPU-accelerated smooth scrolling.');
+    return;
+  }
+
+  lenisInstance = new Lenis({
+    duration: 1.15,
+    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Apple-style exponential deceleration
+    direction: 'vertical',
+    gestureDirection: 'vertical',
+    smooth: true,
+    smoothTouch: false,
+    touchMultiplier: 1.5,
+  });
+
+  function raf(time) {
+    lenisInstance.raf(time);
+    requestAnimationFrame(raf);
+  }
+
+  requestAnimationFrame(raf);
+
+  // Synchronize anchor clicks with Lenis
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      const targetId = this.getAttribute('href');
+      if (targetId && targetId !== '#') {
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+          e.preventDefault();
+          lenisInstance.scrollTo(targetElement, { offset: -80 });
+        }
+      }
+    });
+  });
+}
+
+/* ==========================================================================
+   2. Fluid Scroll-Reveal Observer (Staggered Viewport Entrance)
+   ========================================================================== */
+function initScrollReveal() {
+  const revealItems = document.querySelectorAll('.reveal-item');
+  if (!revealItems.length) return;
+
+  const observer = new IntersectionObserver((entries, obs) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+        obs.unobserve(entry.target); // Unobserve once revealed for 0% CPU overhead
+      }
+    });
+  }, {
+    root: null,
+    threshold: 0.08,
+    rootMargin: '0px 0px -40px 0px'
+  });
+
+  revealItems.forEach(item => observer.observe(item));
+}
+
+/* ==========================================================================
+   3. 3D Tilt Physics & Lerped Spotlight Tracking (Buttery Smooth 120Hz Loop)
+   ========================================================================== */
+function initBentoPhysics() {
+  const cards = document.querySelectorAll('.bento-card');
+  if (!cards.length) return;
+
+  // Don't apply 3D tilt on mobile/touch screens to avoid touch lag
+  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  if (isTouchDevice) {
+    cards.forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+        card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+      });
+    });
+    return;
+  }
+
+  cards.forEach(card => {
+    let currentX = 0;
+    let currentY = 0;
+    let targetRotX = 0;
+    let targetRotY = 0;
+    let curRotX = 0;
+    let curRotY = 0;
+    let isHovering = false;
+    let animFrame = null;
+
+    const rect = () => card.getBoundingClientRect();
+
+    card.addEventListener('mouseenter', () => {
+      isHovering = true;
+      startPhysicsLoop();
+    });
+
+    card.addEventListener('mousemove', (e) => {
+      const b = rect();
+      const x = e.clientX - b.left;
+      const y = e.clientY - b.top;
+
+      // Update CSS spotlight coordinates
+      card.style.setProperty('--mouse-x', `${x}px`);
+      card.style.setProperty('--mouse-y', `${y}px`);
+
+      // Calculate subtle tilt angle (-5deg to +5deg)
+      const centerX = b.width / 2;
+      const centerY = b.height / 2;
+      targetRotX = -((y - centerY) / centerY) * 4.5;
+      targetRotY = ((x - centerX) / centerX) * 4.5;
+    });
+
+    card.addEventListener('mouseleave', () => {
+      isHovering = false;
+      targetRotX = 0;
+      targetRotY = 0;
+    });
+
+    function startPhysicsLoop() {
+      if (animFrame) return;
+
+      function update() {
+        // Linear interpolation (lerp factor 0.1 for liquid inertia)
+        curRotX += (targetRotX - curRotX) * 0.1;
+        curRotY += (targetRotY - curRotY) * 0.1;
+
+        if (isHovering) {
+          card.style.transform = `perspective(1000px) rotateX(${curRotX.toFixed(2)}deg) rotateY(${curRotY.toFixed(2)}deg) translate3d(0, -3px, 0)`;
+          animFrame = requestAnimationFrame(update);
+        } else {
+          // Returning to resting position smoothly
+          if (Math.abs(curRotX) > 0.05 || Math.abs(curRotY) > 0.05) {
+            card.style.transform = `perspective(1000px) rotateX(${curRotX.toFixed(2)}deg) rotateY(${curRotY.toFixed(2)}deg) translate3d(0, 0, 0)`;
+            animFrame = requestAnimationFrame(update);
+          } else {
+            card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translate3d(0, 0, 0)`;
+            cancelAnimationFrame(animFrame);
+            animFrame = null;
+          }
+        }
+      }
+
+      animFrame = requestAnimationFrame(update);
+    }
+  });
+}
+
+/* ==========================================================================
+   4. Magnetic Action Buttons (Fluid Cursor Attraction)
+   ========================================================================== */
+function initMagneticButtons() {
+  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  if (isTouchDevice) return;
+
+  const magneticElements = document.querySelectorAll('.magnetic-btn');
+
+  magneticElements.forEach(btn => {
+    btn.addEventListener('mousemove', (e) => {
+      const rect = btn.getBoundingClientRect();
+      const x = e.clientX - (rect.left + rect.width / 2);
+      const y = e.clientY - (rect.top + rect.height / 2);
+
+      // Magnetic pull factor (0.28x)
+      btn.style.transform = `translate3d(${x * 0.28}px, ${y * 0.28}px, 0)`;
+    });
+
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transform = 'translate3d(0px, 0px, 0px)';
+    });
+  });
+}
+
+/* ==========================================================================
+   5. Delta-Time 120Hz High-DPI Constellation Particle Canvas
+   ========================================================================== */
+function initParticleCanvas() {
+  const canvas = document.getElementById('particle-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  let width = 0;
+  let height = 0;
+  let dpr = window.devicePixelRatio || 1;
+
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+
+  const particles = [];
+  const particleCount = Math.min(Math.floor(window.innerWidth / 28), 42);
+
+  for (let i = 0; i < particleCount; i++) {
+    particles.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 28, // pixels per second
+      vy: (Math.random() - 0.5) * 28,
+      radius: Math.random() * 1.5 + 0.9
+    });
+  }
+
+  let mouseX = -1000;
+  let mouseY = -1000;
+
+  window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  let lastTime = performance.now();
+
+  function render(now) {
+    const dt = Math.min((now - lastTime) / 1000, 0.05); // Delta-time in seconds (capped at 50ms to prevent jumps)
+    lastTime = now;
+
+    ctx.clearRect(0, 0, width, height);
+
+    const isDark = document.documentElement.classList.contains('dark');
+    const particleColor = isDark ? 'rgba(6, 182, 212, 0.5)' : 'rgba(8, 145, 178, 0.45)';
+    const lineColorBase = isDark ? '6, 182, 212' : '8, 145, 178';
+    const lineAlphaMax = isDark ? 0.16 : 0.13;
+
+    // Draw connecting lines
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 135) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(${lineColorBase}, ${lineAlphaMax * (1 - dist / 135)})`;
+          ctx.lineWidth = 0.75;
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Update & draw particles using delta-time
+    particles.forEach(p => {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+
+      if (p.x < 0) p.x = width;
+      if (p.x > width) p.x = 0;
+      if (p.y < 0) p.y = height;
+      if (p.y > height) p.y = 0;
+
+      // Mouse repulsion physics
+      const mdx = p.x - mouseX;
+      const mdy = p.y - mouseY;
+      const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
+      if (mdist < 85 && mdist > 0) {
+        const force = (1 - mdist / 85) * 60;
+        p.x += (mdx / mdist) * force * dt;
+        p.y += (mdy / mdist) * force * dt;
+      }
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = particleColor;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(render);
+  }
+
+  requestAnimationFrame(render);
+}
+
+/* ==========================================================================
+   6. Theme Switcher (Light / Dark Mode with Persistence)
    ========================================================================== */
 function initThemeToggle() {
   const toggleBtn = document.getElementById('theme-toggle-btn');
@@ -64,7 +362,7 @@ function toggleTheme() {
 }
 
 /* ==========================================================================
-   2. Role Cycler (Typewriter style)
+   7. Dynamic Role Cycler (Typewriter style)
    ========================================================================== */
 function initRoleCycler() {
   const roles = [
@@ -112,117 +410,7 @@ function initRoleCycler() {
 }
 
 /* ==========================================================================
-   3. Bento Card Spotlight Tracking
-   ========================================================================== */
-function initCardSpotlight() {
-  const cards = document.querySelectorAll('.bento-card');
-  cards.forEach(card => {
-    card.addEventListener('mousemove', e => {
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      card.style.setProperty('--mouse-x', `${x}px`);
-      card.style.setProperty('--mouse-y', `${y}px`);
-    });
-  });
-}
-
-/* ==========================================================================
-   4. Interactive Particle Background Canvas
-   ========================================================================== */
-function initParticleCanvas() {
-  const canvas = document.getElementById('particle-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-
-  let width = (canvas.width = window.innerWidth);
-  let height = (canvas.height = window.innerHeight);
-
-  window.addEventListener('resize', () => {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
-  });
-
-  const particles = [];
-  const particleCount = Math.min(Math.floor(window.innerWidth / 25), 45);
-
-  for (let i = 0; i < particleCount; i++) {
-    particles.push({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
-      radius: Math.random() * 1.5 + 0.8
-    });
-  }
-
-  let mouseX = -1000;
-  let mouseY = -1000;
-
-  window.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-  });
-
-  function render() {
-    ctx.clearRect(0, 0, width, height);
-
-    const isDark = document.documentElement.classList.contains('dark');
-    const particleColor = isDark ? 'rgba(6, 182, 212, 0.5)' : 'rgba(8, 145, 178, 0.45)';
-    const lineColorBase = isDark ? '6, 182, 212' : '8, 145, 178';
-    const lineAlphaMax = isDark ? 0.15 : 0.12;
-
-    // Draw connecting lines
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < 130) {
-          ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = `rgba(${lineColorBase}, ${lineAlphaMax * (1 - dist / 130)})`;
-          ctx.lineWidth = 0.7;
-          ctx.stroke();
-        }
-      }
-    }
-
-    // Draw and update particles
-    particles.forEach(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-
-      if (p.x < 0) p.x = width;
-      if (p.x > width) p.x = 0;
-      if (p.y < 0) p.y = height;
-      if (p.y > height) p.y = 0;
-
-      // Slight mouse repulsion
-      const mdx = p.x - mouseX;
-      const mdy = p.y - mouseY;
-      const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
-      if (mdist < 80) {
-        p.x += (mdx / mdist) * 1.2;
-        p.y += (mdy / mdist) * 1.2;
-      }
-
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      ctx.fillStyle = particleColor;
-      ctx.fill();
-    });
-
-    requestAnimationFrame(render);
-  }
-
-  render();
-}
-
-/* ==========================================================================
-   5. Live GitHub Data Fetching (User: Unknownknowns1)
+   8. Live GitHub REST API Integration (Unknownknowns1)
    ========================================================================== */
 async function fetchGitHubData() {
   const username = 'Unknownknowns1';
@@ -231,7 +419,6 @@ async function fetchGitHubData() {
   const bioEl = document.getElementById('gh-bio');
   const avatarEl = document.getElementById('gh-avatar');
 
-  // Fallback curated repositories in case of GitHub rate limiting
   const fallbackRepos = [
     {
       name: "DRK-hackathon-1",
@@ -271,7 +458,6 @@ async function fetchGitHubData() {
   ];
 
   try {
-    // Fetch user profile info
     const userRes = await fetch(`https://api.github.com/users/${username}`);
     if (userRes.ok) {
       const userData = await userRes.json();
@@ -286,7 +472,6 @@ async function fetchGitHubData() {
       }
     }
 
-    // Fetch user repositories
     const reposRes = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=6`);
     if (reposRes.ok) {
       const repos = await reposRes.json();
@@ -295,7 +480,6 @@ async function fetchGitHubData() {
         return;
       }
     }
-    // Fallback if empty or failed
     renderRepos(fallbackRepos, container);
   } catch (err) {
     console.warn('GitHub API rate limited or network issue, using curated repositories:', err);
@@ -307,7 +491,7 @@ function renderRepos(repos, container) {
   if (!container) return;
   container.innerHTML = '';
 
-  repos.slice(0, 6).forEach(repo => {
+  repos.slice(0, 6).forEach((repo, idx) => {
     const lang = repo.language || 'Code';
     let langColor = 'bg-cyan-500';
     if (lang === 'Python') langColor = 'bg-yellow-500';
@@ -318,7 +502,8 @@ function renderRepos(repos, container) {
     card.href = repo.html_url;
     card.target = '_blank';
     card.rel = 'noopener noreferrer';
-    card.className = 'group p-5 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-white/5 hover:border-cyan-500/50 transition-all flex flex-col justify-between shadow-sm';
+    card.className = `group bento-card reveal-item stagger-${(idx % 4) + 1} p-5 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-white/5 hover:border-cyan-500/50 transition-all flex flex-col justify-between shadow-sm`;
+    card.setAttribute('data-tilt', '');
 
     card.innerHTML = `
       <div>
@@ -352,10 +537,14 @@ function renderRepos(repos, container) {
   if (window.lucide) {
     lucide.createIcons();
   }
+
+  // Bind 3D physics and scroll reveal to dynamic cards
+  initScrollReveal();
+  initBentoPhysics();
 }
 
 /* ==========================================================================
-   6. Interactive CLI Terminal Drawer / Modal
+   9. Interactive CLI Terminal Drawer / Modal
    ========================================================================== */
 function initTerminal() {
   const openBtn = document.getElementById('open-terminal-btn');
@@ -374,26 +563,25 @@ function initTerminal() {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     input.focus();
+    if (lenisInstance) lenisInstance.stop(); // Pause body smooth scroll while terminal open
   }
 
   function closeTerminal() {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
+    if (lenisInstance) lenisInstance.start(); // Resume body smooth scroll
   }
 
   if (openBtn) openBtn.addEventListener('click', openTerminal);
   if (closeBtn) closeBtn.addEventListener('click', closeTerminal);
   if (closeDot) closeDot.addEventListener('click', closeTerminal);
 
-  // Close when clicking modal backdrop
   modal.addEventListener('click', (e) => {
     if (e.target === modal) closeTerminal();
   });
 
-  // Global Keyboard shortcut listener (~ or Ctrl+K or ESC)
   window.addEventListener('keydown', (e) => {
     if (e.key === '`' || e.key === '~') {
-      // Don't trigger if typing in a form input
       if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
         e.preventDefault();
         if (modal.classList.contains('hidden')) {
@@ -414,7 +602,6 @@ function initTerminal() {
     }
   });
 
-  // Command History & Execution
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       const rawCmd = input.value.trim();
@@ -447,7 +634,6 @@ function initTerminal() {
   function executeCommand(cmd) {
     const cleanCmd = cmd.toLowerCase().trim();
 
-    // Echo command line
     const echoLine = document.createElement('div');
     echoLine.className = 'flex items-center gap-2 text-slate-400 mt-2';
     echoLine.innerHTML = `<span class="text-emerald-400 font-bold">sai@portfolio:~$</span> <span>${escapeHtml(cmd)}</span>`;
@@ -586,7 +772,7 @@ function initTerminal() {
 }
 
 /* ==========================================================================
-   7. Copy to Clipboard & Toast
+   10. Copy to Clipboard & Toast
    ========================================================================== */
 function initCopyButtons() {
   const email = "saiharshith54321@gmail.com";
@@ -621,7 +807,7 @@ function showToast(message) {
 }
 
 /* ==========================================================================
-   8. Working Contact Form
+   11. Working Contact Form
    ========================================================================== */
 function initContactForm() {
   const form = document.getElementById('contact-form');
@@ -643,14 +829,12 @@ function initContactForm() {
       return;
     }
 
-    // Set sending state
     submitBtn.disabled = true;
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = `<span>Sending...</span>`;
     if (statusEl) statusEl.textContent = "Dispatching message...";
 
     try {
-      // Using Formspree / Web3Forms endpoint or mailto fallback
       const response = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
         headers: {
@@ -658,7 +842,7 @@ function initContactForm() {
           Accept: "application/json"
         },
         body: JSON.stringify({
-          access_key: "YOUR_WEB3FORMS_ACCESS_KEY", // Free access key or user can add their own
+          access_key: "YOUR_WEB3FORMS_ACCESS_KEY",
           name: name,
           email: email,
           subject: subject || "Portfolio Inquiry for G. Sai Harshith",
@@ -677,7 +861,6 @@ function initContactForm() {
         }
         form.reset();
       } else {
-        // Fallback to mailto link if API key is unconfigured
         const mailtoUrl = `mailto:saiharshith54321@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent("Name: " + name + "\nEmail: " + email + "\n\n" + message)}`;
         window.location.href = mailtoUrl;
         showToast("Opening default email client...");
@@ -687,7 +870,6 @@ function initContactForm() {
         }
       }
     } catch (err) {
-      // Direct mailto fallback
       const mailtoUrl = `mailto:saiharshith54321@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent("Name: " + name + "\nEmail: " + email + "\n\n" + message)}`;
       window.location.href = mailtoUrl;
       showToast("Opened mail draft in your email client.");
